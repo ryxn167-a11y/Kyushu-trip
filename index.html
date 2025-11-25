@@ -1,14 +1,17 @@
-<!DOCTYPE html>
+                    <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>福岡九州之旅 2022</title>
-    
+
+    <!-- 1. 載入 Tailwind CSS (樣式庫) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
+    <!-- 2. 載入 Lucide Icons (圖標庫) -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- 3. Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <style>
@@ -17,48 +20,70 @@
             background-color: #f4f4f5;
             -webkit-tap-highlight-color: transparent;
         }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.5);
         }
-        .nav-btn.active { color: #4f46e5; }
-        .nav-btn.inactive { color: #9ca3af; }
-        .date-btn.active { background-color: #4f46e5; color: white; transform: scale(1.05); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .date-btn.inactive { background-color: white; color: #9ca3af; border: 1px solid #f3f4f6; }
+        /* 隱藏滾動條但保留功能 */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 載入與錯誤畫面樣式 */
+        #loading-screen {
+            position: fixed; inset: 0; background: #f4f4f5; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        #error-screen {
+            display: none; padding: 20px; color: red; background: #fee2e2; border: 1px solid red; margin: 20px; rounded: 8px; word-break: break-all;
+        }
     </style>
 </head>
 <body>
 
-    <div id="app" class="max-w-md mx-auto bg-[#f4f4f5] min-h-screen relative shadow-2xl overflow-hidden pb-24">
+    <!-- 載入中畫面 -->
+    <div id="loading-screen">
+        <div class="text-2xl font-bold text-gray-600 mb-2">正在載入行程...</div>
+        <div class="text-sm text-gray-400">Loading App Data...</div>
+    </div>
+
+    <!-- 錯誤顯示區 (預設隱藏) -->
+    <div id="error-screen"></div>
+
+    <!-- 主程式介面 (預設隱藏，載入完成後顯示) -->
+    <div id="app-container" style="display:none;" class="max-w-md mx-auto bg-[#f4f4f5] min-h-screen relative shadow-2xl overflow-hidden pb-24">
         
-        <div id="itinerary-view">
+        <!-- 行程頁面 -->
+        <div id="view-itinerary">
+            <!-- 日期導航列 -->
             <div class="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
                 <div class="flex overflow-x-auto hide-scrollbar p-4 gap-3" id="date-scroller">
-                    </div>
+                    <!-- JS 將自動產生日期按鈕 -->
+                </div>
             </div>
 
+            <!-- 每日標題 -->
             <div class="px-6 py-6 flex justify-between items-start">
                 <div>
-                    <h1 id="city-name" class="text-3xl font-bold text-gray-800 tracking-tight"></h1>
-                    <p id="highlights" class="text-gray-500 mt-1 text-sm flex gap-2 flex-wrap"></p>
+                    <h1 id="header-city" class="text-3xl font-bold text-gray-800 tracking-tight">福岡</h1>
+                    <p id="header-desc" class="text-gray-500 mt-1 text-sm flex gap-2 flex-wrap"></p>
                 </div>
-                <a id="weather-link" href="#" target="_blank" class="flex flex-col items-center bg-blue-50 p-2 rounded-lg">
+                <a id="btn-weather" href="#" target="_blank" class="flex flex-col items-center bg-blue-50 p-2 rounded-lg active:scale-95 transition-transform">
                     <i data-lucide="sun" class="text-orange-400 mb-1 w-5 h-5"></i>
                     <span class="text-[10px] text-blue-600 font-bold">天氣</span>
                 </a>
             </div>
 
+            <!-- 時間軸卡片區 -->
             <div class="px-4 flex flex-col gap-4 relative">
                 <div class="absolute left-8 top-4 bottom-4 w-0.5 bg-gray-200 -z-10"></div>
-                <div id="timeline-container">
-                    </div>
+                <div id="cards-container">
+                    <!-- JS 將自動產生卡片 -->
+                </div>
             </div>
         </div>
 
-        <div id="tools-view" class="hidden p-6">
+        <!-- 工具頁面 -->
+        <div id="view-tools" class="hidden p-6">
             <h1 class="text-2xl font-bold text-gray-800 mb-6">旅行工具箱</h1>
             
             <div class="bg-red-50 p-4 rounded-2xl border border-red-100 mb-6 flex gap-4 items-center">
@@ -82,7 +107,11 @@
                     <span class="text-sm text-gray-400 mb-1">円</span>
                 </div>
                 <div class="h-4 flex rounded-full overflow-hidden bg-gray-100 mb-4">
-                    <div class="bg-green-500" style="width: 8%"></div> <div class="bg-blue-500" style="width: 19%"></div> <div class="bg-orange-500" style="width: 35%"></div> <div class="bg-pink-500" style="width: 38%"></div> </div>
+                    <div class="bg-green-500" style="width: 8%"></div>
+                    <div class="bg-blue-500" style="width: 19%"></div>
+                    <div class="bg-orange-500" style="width: 35%"></div>
+                    <div class="bg-pink-500" style="width: 38%"></div>
+                </div>
                 <div class="grid grid-cols-2 gap-3 text-xs">
                     <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div>JR Pass</div>
                     <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-blue-500"></div>住宿</div>
@@ -97,41 +126,341 @@
                     <h2 class="font-bold text-gray-700">行前清單</h2>
                 </div>
                 <div id="checklist-container" class="space-y-3">
-                    </div>
+                    <!-- JS renders checklist -->
+                </div>
             </div>
         </div>
-
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 backdrop-blur-md border-t border-gray-200 px-6 py-4 flex justify-between items-center z-50 pb-6">
-        <button onclick="switchTab('itinerary')" id="tab-itinerary" class="nav-btn active flex flex-col items-center gap-1 transition-colors">
+    <!-- 底部 Tab Bar -->
+    <div id="bottom-nav" style="display:none;" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-gray-200 px-6 py-4 flex justify-between items-center z-50 pb-6">
+        <button onclick="switchTab('itinerary')" id="tab-itinerary" class="flex flex-col items-center gap-1 text-indigo-600 transition-colors">
             <i data-lucide="calendar" class="w-6 h-6"></i>
             <span class="text-[10px] font-medium">行程</span>
         </button>
         <div class="w-px h-8 bg-gray-200"></div>
-        <button onclick="switchTab('tools')" id="tab-tools" class="nav-btn inactive flex flex-col items-center gap-1 transition-colors">
-            <i data-lucide="wallet" class="w-6 h-6"></i>
+        <button onclick="switchTab('tools')" id="tab-tools" class="flex flex-col items-center gap-1 text-gray-400 transition-colors">
+            <i data-lucide="briefcase" class="w-6 h-6"></i>
             <span class="text-[10px] font-medium">工具</span>
         </button>
     </div>
 
+    <!-- 4. 主程式邏輯 (放在最後面以確保安全) -->
     <script>
-        // --- DATA ---
-        const TRIP_DATA = {
-            "2022-12-10": {
-                city: "福岡市區", weatherCity: "Fukuoka", highlights: ["抵達", "天神", "屋台"],
-                items: [
-                    { time: "07:00", type: "transport", title: "抵達福岡機場", desc: "前往國內線航廈搭地鐵", sub: "建議購買地鐵一日券" },
-                    { time: "08:30", type: "transport", title: "機場巴士/地鐵", desc: "搭1號巴士去國內線轉地鐵 (約15分)", dest: "天神南站" },
-                    { time: "10:00", type: "hotel", title: "飯店寄放行李", desc: "住天神南，可在天神站走地下街到達" },
-                    { time: "11:00", type: "visit", title: "天神地下街/市區", desc: "換電話卡，閒逛，吃午餐" },
-                    { time: "18:00", type: "food", title: "中洲屋台", desc: "體驗博多屋台文化", tags: ["必吃", "氣氛"] }
-                ]
-            },
-            "2022-12-11": {
-                city: "別府", weatherCity: "Beppu", highlights: ["地獄溫泉", "米其林三星溫泉"],
-                items: [
-                    { time: "07:31", type: "transport", title: "音速號 Sonic", desc: "博多 -> 別府", dest: "別府站", sub: "09:52 抵達" },
-                    { time: "10:30", type: "visit", title: "別府地獄巡禮", desc: "海地獄、血池地獄等7大溫泉", link: "https://boo2k.com" },
-                    { time: "13:00", type: "food", title: "地獄蒸し工房 鉄輪", desc: "利用溫泉蒸氣蒸煮食物", tags: ["體驗", "特色"] },
+        // 全局錯誤攔截
+        window.onerror = function(msg, source, lineno, colno, error) {
+            document.getElementById('loading-screen').style.display = 'none';
+            var errorDiv = document.getElementById('error-screen');
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = '<strong>發生錯誤:</strong><br>' + msg + '<br><br>Line: ' + lineno;
+            return false;
+        };
+
+        try {
+            // --- 資料庫 ---
+            const TRIP_DATA = {
+                "2022-12-10": {
+                    city: "福岡市區", weatherCity: "Fukuoka", highlights: ["抵達", "天神", "屋台"],
+                    items: [
+                        { time: "07:00", type: "transport", title: "抵達福岡機場", desc: "前往國內線航廈搭地鐵", sub: "建議購買地鐵一日券" },
+                        { time: "08:30", type: "transport", title: "機場巴士/地鐵", desc: "搭1號巴士去國內線轉地鐵 (約15分)", dest: "天神南站" },
+                        { time: "10:00", type: "hotel", title: "飯店寄放行李", desc: "住天神南，可在天神站走地下街到達" },
+                        { time: "11:00", type: "visit", title: "天神地下街/市區", desc: "換電話卡，閒逛，吃午餐" },
+                        { time: "18:00", type: "food", title: "中洲屋台", desc: "體驗博多屋台文化", tags: ["必吃", "氣氛"] }
+                    ]
+                },
+                "2022-12-11": {
+                    city: "別府", weatherCity: "Beppu", highlights: ["地獄溫泉", "米其林三星溫泉"],
+                    items: [
+                        { time: "07:31", type: "transport", title: "音速號 Sonic", desc: "博多 -> 別府", dest: "別府站", sub: "09:52 抵達" },
+                        { time: "10:30", type: "visit", title: "別府地獄巡禮", desc: "海地獄、血池地獄等7大溫泉", link: "https://boo2k.com" },
+                        { time: "13:00", type: "food", title: "地獄蒸し工房 鉄輪", desc: "利用溫泉蒸氣蒸煮食物", tags: ["體驗", "特色"] },
+                        { time: "15:00", type: "visit", title: "葫蘆溫泉", desc: "唯一米其林三星溫泉，砂浴體驗", sub: "記得帶毛巾", link: "https://hyotan-onsen.com" },
+                        { time: "18:00", type: "food", title: "天丼 とよ常", desc: "別府人氣天丼", tags: ["排隊美食"] },
+                        { time: "20:20", type: "transport", title: "音速號回程", desc: "別府 -> 博多", sub: "22:27 抵達" }
+                    ]
+                },
+                "2022-12-12": {
+                    city: "由布院", weatherCity: "Yufu", highlights: ["由布院之森", "金鱗湖", "釜飯"],
+                    items: [
+                        { time: "09:17", type: "transport", title: "由布院之森 1號", desc: "博多 -> 由布院", dest: "由布院站", sub: "11:31 抵達 (需劃位)" },
+                        { time: "12:00", type: "food", title: "由布まぶし心 (駅前店)", desc: "地雞、鰻魚、豐後牛蓋飯三吃", tags: ["必吃", "排隊"], link: "https://www.bigfang.tw/blog/post/yufumabushishin" },
+                        { time: "13:30", type: "visit", title: "湯之坪街道", desc: "B-Speak 蛋糕捲, 史努比茶屋" },
+                        { time: "14:30", type: "visit", title: "Yufuin Floral Village", desc: "童話村、貓頭鷹之森", link: "http://floral-village.com/" },
+                        { time: "15:30", type: "visit", title: "金鱗湖", desc: "晨霧與倒影最美，但下午也很愜意" },
+                        { time: "19:26", type: "transport", title: "由布院號回程", desc: "由布院 -> 博多", sub: "21:33 抵達" }
+                    ]
+                },
+                "2022-12-13": {
+                    city: "熊本", weatherCity: "Kumamoto", highlights: ["熊本熊", "勝烈亭", "熊本城"],
+                    items: [
+                        { time: "08:30", type: "transport", title: "新幹線 櫻花號", desc: "博多 -> 熊本", dest: "熊本站", sub: "09:00 抵達 (超快!)" },
+                        { time: "09:30", type: "visit", title: "熊本站買一日券", desc: "市電一日券 500yen", sub: "綜合觀光案內所" },
+                        { time: "10:30", type: "visit", title: "熊本熊部長辦公室", desc: "鶴屋百貨東館 1F", tags: ["親子", "拍照"] },
+                        { time: "12:00", type: "food", title: "勝烈亭 豬排", desc: "米其林推薦，鹿兒島六白黑豬", tags: ["米其林", "必吃"] },
+                        { time: "14:00", type: "visit", title: "熊本城 & 加藤神社", desc: "日本三大名城之一，修復中見學" },
+                        { time: "16:00", type: "visit", title: "櫻之馬場 城彩苑", desc: "江戶時代風情商店街，吃海膽可樂餅" },
+                        { time: "18:00", type: "food", title: "菅乃屋 馬肉料理", desc: "熊本特色生馬肉 (可選)", tags: ["挑戰"] },
+                        { time: "21:10", type: "transport", title: "新幹線回程", desc: "熊本 -> 博多", sub: "21:48 抵達" }
+                    ]
+                },
+                "2022-12-14": {
+                    city: "鹿兒島", weatherCity: "Kagoshima", highlights: ["櫻島火山", "仙巖園", "黑豚"],
+                    items: [
+                        { time: "07:58", type: "transport", title: "新幹線 瑞穗號", desc: "博多 -> 鹿兒島中央", dest: "鹿兒島中央", sub: "09:33 抵達" },
+                        { time: "10:00", type: "transport", title: "櫻島渡輪", desc: "前往櫻島火山", sub: "船上必吃烏龍麵" },
+                        { time: "10:30", type: "visit", title: "櫻島", desc: "有村熔岩展望台、叫叫廣塲泡足湯" },
+                        { time: "13:00", type: "food", title: "黑豚料理 壽庵", desc: "黑豚涮涮鍋/炸豬排", tags: ["名物"] },
+                        { time: "15:00", type: "visit", title: "仙巖園", desc: "借景櫻島的日式庭園，吃兩棒餅", tags: ["世界遺產"] },
+                        { time: "18:00", type: "visit", title: "天文館通", desc: "鹿兒島最熱鬧商店街，白熊冰" },
+                        { time: "20:59", type: "transport", title: "新幹線回程", desc: "鹿兒島中央 -> 博多", sub: "22:44 抵達" }
+                    ]
+                },
+                "2022-12-15": {
+                    city: "能古島/太宰府", weatherCity: "Fukuoka", highlights: ["海島公園", "太宰府天滿宮"],
+                    items: [
+                        { time: "09:00", type: "transport", title: "渡輪往能古島", desc: "姪濱渡船場出發", dest: "能古島" },
+                        { time: "10:00", type: "visit", title: "能古島海島公園", desc: "四季花海，海景盪鞦韆", link: "http://nokonoshima.com/" },
+                        { time: "13:00", type: "transport", title: "前往太宰府", desc: "回市區轉西鐵電車" },
+                        { time: "14:30", type: "visit", title: "太宰府天滿宮", desc: "學問之神，表參道吃梅枝餅", tags: ["必吃梅枝餅"] },
+                        { time: "16:00", type: "visit", title: "星巴克 太宰府店", desc: "隈研吾設計，木條交錯建築", tags: ["打卡"] },
+                        { time: "18:00", type: "food", title: "一蘭拉麵 太宰府參道店", desc: "限定五角碗 (合格祈願)", tags: ["限定"] }
+                    ]
+                },
+                "2022-12-16": {
+                    city: "長崎", weatherCity: "Nagasaki", highlights: ["原爆館", "千萬夜景", "土耳其飯"],
+                    items: [
+                        { time: "08:10", type: "transport", title: "接力海鷗號", desc: "博多 -> 武雄溫泉轉新幹線 -> 長崎", dest: "長崎站", sub: "09:50 抵達" },
+                        { time: "10:30", type: "visit", title: "長崎原爆資料館", desc: "平和公園，沉重的歷史" },
+                        { time: "12:30", type: "food", title: "Tsuruchan 鶴茶庵", desc: "長崎名物：土耳其飯", tags: ["老舖"], link: "https://bring-you.info/nagasaki-tsuru-chan" },
+                        { time: "14:00", type: "visit", title: "哥拉巴園", desc: "蝴蝶夫人故居，異國風情，尋找愛心石" },
+                        { time: "16:00", type: "visit", title: "大浦天主堂", desc: "日本最古老教堂" },
+                        { time: "17:30", type: "visit", title: "稻佐山夜景", desc: "世界新三大夜景，搭纜車上山", tags: ["必看"] },
+                        { time: "19:30", type: "food", title: "吉宗", desc: "元祖茶碗蒸，整套桌袱料理", tags: ["必吃"] },
+                        { time: "20:20", type: "transport", title: "新幹線回程", desc: "長崎 -> 博多", sub: "21:56 抵達" }
+                    ]
+                },
+                "2022-12-17": {
+                    city: "福岡/返程", weatherCity: "Fukuoka", highlights: ["購物", "回程"],
+                    items: [
+                        { time: "09:00", type: "hotel", title: "Check-out", desc: "行李寄放博多車站 Locker" },
+                        { time: "10:00", type: "visit", title: "博多車站/運河城", desc: "最後衝刺購物，買伴手禮" },
+                        { time: "12:00", type: "food", title: "博多拉麵", desc: "博多一雙 或 ShinShin", tags: ["最後一碗"] },
+                        { time: "14:00", type: "transport", title: "前往機場", desc: "地鐵往福岡機場" },
+                        { time: "15:00", type: "plane", title: "辦理登機", desc: "填寫回程健康申報", sub: "Bye Bye Kyushu" }
+                    ]
+                }
+            };
+
+            const CHECKLIST_ITEMS = [
+                "護照 (檢查效期)", "Visit Japan Web 登錄", "3針疫苗證明 / PCR", 
+                "外幣兌換 (約40萬日幣)", "網卡/漫遊開通", "行動電源 (Handcarry)", 
+                "個人藥品/快篩", "購買 JR Pass"
+            ];
+
+            // --- 邏輯函數 ---
+            
+            // 渲染行程
+            function renderItinerary(date) {
+                const data = TRIP_DATA[date];
+                if (!data) return;
+
+                // 更新標題
+                document.getElementById('header-city').innerText = data.city;
+                
+                // 更新亮點
+                const highlightsContainer = document.getElementById('header-desc');
+                highlightsContainer.innerHTML = '';
+                data.highlights.forEach(h => {
+                    const span = document.createElement('span');
+                    span.className = "text-indigo-500 font-medium";
+                    span.innerText = "✦ " + h;
+                    highlightsContainer.appendChild(span);
+                });
+
+                // 更新天氣連結
+                document.getElementById('btn-weather').href = "https://weather.yahoo.co.jp/weather/search/?a=&p=" + data.weatherCity;
+
+                // 更新日期選擇器
+                const scroller = document.getElementById('date-scroller');
+                scroller.innerHTML = '';
+                
+                Object.keys(TRIP_DATA).forEach(d => {
+                    const dayNum = d.split('-')[2];
+                    const isActive = d === date;
                     
+                    const btn = document.createElement('button');
+                    // 使用 Tailwind class 處理選中狀態
+                    let baseClass = "flex flex-col items-center min-w-[3.5rem] p-2 rounded-xl transition-all border ";
+                    if (isActive) {
+                        baseClass += "bg-indigo-600 text-white shadow-lg scale-105 border-indigo-600";
+                    } else {
+                        baseClass += "bg-white text-gray-400 border-gray-100";
+                    }
+                    btn.className = baseClass;
+                    
+                    // 點擊事件
+                    btn.onclick = function() { renderItinerary(d); };
+                    
+                    const weekday = new Date(d).toLocaleDateString('en-US', {weekday: 'short'});
+                    btn.innerHTML = `<span class="text-xs font-medium uppercase">${weekday}</span><span class="text-xl font-bold">${dayNum}</span>`;
+                    scroller.appendChild(btn);
+                });
+
+                // 更新卡片
+                const container = document.getElementById('cards-container');
+                container.innerHTML = ''; // 清空
+
+                data.items.forEach(item => {
+                    // 決定圖標名稱
+                    let iconName = 'info';
+                    let titleColor = 'text-gray-800';
+                    if (item.type === 'transport') { iconName = 'train'; titleColor = 'text-indigo-900'; }
+                    else if (item.type === 'food') { iconName = 'utensils'; }
+                    else if (item.type === 'visit') { iconName = 'map-pin'; }
+                    else if (item.type === 'hotel') { iconName = 'home'; }
+                    else if (item.type === 'plane') { iconName = 'plane'; }
+
+                    // 標籤 HTML
+                    let tagsHtml = '';
+                    if (item.tags) {
+                        tagsHtml = item.tags.map(t => {
+                            const isImportant = t.includes('必') || t.includes('米其林') || t.includes('限定');
+                            const colorClass = isImportant ? 'bg-red-100 text-red-600 font-bold' : 'bg-gray-100 text-gray-600';
+                            return `<span class="px-2 py-0.5 rounded text-[10px] ${colorClass} mr-1">#${t}</span>`;
+                        }).join('');
+                    }
+
+                    // 連結按鈕 HTML
+                    let infoBtn = '';
+                    if (item.link) {
+                        infoBtn = `<a href="${item.link}" target="_blank" class="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-white text-gray-600 border border-gray-200">資訊 <i data-lucide="external-link" class="w-3 h-3"></i></a>`;
+                    }
+
+                    // 導航連結
+                    const navQuery = item.dest || (item.title + " " + data.city);
+                    const navUrl = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(navQuery);
+
+                    // 建立卡片 DOM
+                    const cardDiv = document.createElement('div');
+                    cardDiv.className = "flex gap-4 items-start mb-4";
+                    cardDiv.innerHTML = `
+                        <div class="flex flex-col items-center min-w-[3.5rem] pt-1">
+                            <span class="text-sm font-bold text-gray-600 font-mono bg-[#f4f4f5] py-1">${item.time}</span>
+                        </div>
+                        <div class="flex-1 glass-card p-4 rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)]">
+                            <div class="flex gap-2 items-center mb-2">
+                                <div class="p-1.5 bg-gray-50 rounded-lg">
+                                    <i data-lucide="${iconName}" class="w-5 h-5 ${item.type === 'transport' ? 'text-indigo-500' : 'text-gray-500'}"></i>
+                                </div>
+                                <h3 class="font-bold ${titleColor}">${item.title}</h3>
+                            </div>
+                            <p class="text-sm text-gray-600 leading-relaxed mb-3">${item.desc}</p>
+                            ${item.dest ? `<div class="flex items-center gap-1 text-xs text-gray-500 mb-3 bg-gray-50 p-2 rounded border border-gray-100"><i data-lucide="navigation" class="w-3 h-3"></i> 目的地: ${item.dest}</div>` : ''}
+                            ${item.sub ? `<div class="text-xs text-indigo-500 font-medium mb-3">ℹ️ ${item.sub}</div>` : ''}
+                            <div class="flex flex-wrap gap-2 mt-2 items-center justify-between border-t border-gray-100 pt-3">
+                                <div class="flex gap-1 flex-wrap">${tagsHtml}</div>
+                                <div class="flex gap-2">
+                                    ${infoBtn}
+                                    <a href="${navUrl}" target="_blank" class="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-indigo-600 text-white shadow-md">導航 <i data-lucide="navigation" class="w-3 h-3"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(cardDiv);
+                });
+
+                // 重要：重新渲染圖標
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+
+            // 渲染清單
+            function renderChecklist() {
+                const container = document.getElementById('checklist-container');
+                container.innerHTML = '';
+                
+                CHECKLIST_ITEMS.forEach((text, i) => {
+                    const id = 'check-' + i;
+                    const isChecked = localStorage.getItem(id) === 'true';
+
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = "flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer";
+                    itemDiv.onclick = function() { toggleCheck(id); };
+
+                    itemDiv.innerHTML = `
+                        <div id="box-${id}" class="w-5 h-5 rounded border flex items-center justify-center ${isChecked ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300'}">
+                            ${isChecked ? '<span class="text-white text-xs">✓</span>' : ''}
+                        </div>
+                        <span id="text-${id}" class="${isChecked ? 'text-gray-400 line-through' : 'text-gray-700'}">${text}</span>
+                    `;
+                    container.appendChild(itemDiv);
+                });
+            }
+
+            // 切換清單狀態
+            function toggleCheck(id) {
+                const current = localStorage.getItem(id) === 'true';
+                localStorage.setItem(id, !current);
+                renderChecklist(); // 重繪
+            }
+
+            // 切換 Tab
+            window.switchTab = function(tabName) {
+                const viewItinerary = document.getElementById('view-itinerary');
+                const viewTools = document.getElementById('view-tools');
+                const btnItinerary = document.getElementById('tab-itinerary');
+                const btnTools = document.getElementById('tab-tools');
+
+                if (tabName === 'itinerary') {
+                    viewItinerary.style.display = 'block';
+                    viewTools.style.display = 'none';
+                    
+                    btnItinerary.classList.remove('text-gray-400');
+                    btnItinerary.classList.add('text-indigo-600');
+                    btnTools.classList.remove('text-indigo-600');
+                    btnTools.classList.add('text-gray-400');
+                } else {
+                    viewItinerary.style.display = 'none';
+                    viewTools.style.display = 'block';
+                    
+                    btnItinerary.classList.remove('text-indigo-600');
+                    btnItinerary.classList.add('text-gray-400');
+                    btnTools.classList.remove('text-gray-400');
+                    btnTools.classList.add('text-indigo-600');
+                }
+                
+                // 回到頂部
+                window.scrollTo(0, 0);
+                
+                // 確保切換後圖標存在
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            };
+
+            // 初始化執行
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(function() {
+                    try {
+                        renderItinerary("2022-12-10");
+                        renderChecklist();
+                        
+                        // 隱藏 Loading，顯示 App
+                        document.getElementById('loading-screen').style.display = 'none';
+                        document.getElementById('app-container').style.display = 'block';
+                        document.getElementById('bottom-nav').style.display = 'flex';
+
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    } catch (err) {
+                        throw err; // 丟給 window.onerror 處理
+                    }
+                }, 500); // 稍微延遲讓 CSS 載入
+            });
+
+        } catch (e) {
+            console.error(e);
+            alert("初始化失敗: " + e.message);
+        }
+    </script>
+</body>
+</html>
