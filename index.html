@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>福岡九州之旅 2022</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f4f4f5;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .nav-btn.active { color: #4f46e5; }
+        .nav-btn.inactive { color: #9ca3af; }
+        .date-btn.active { background-color: #4f46e5; color: white; transform: scale(1.05); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .date-btn.inactive { background-color: white; color: #9ca3af; border: 1px solid #f3f4f6; }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="max-w-md mx-auto bg-[#f4f4f5] min-h-screen relative shadow-2xl overflow-hidden pb-24">
+        
+        <div id="itinerary-view">
+            <div class="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+                <div class="flex overflow-x-auto hide-scrollbar p-4 gap-3" id="date-scroller">
+                    </div>
+            </div>
+
+            <div class="px-6 py-6 flex justify-between items-start">
+                <div>
+                    <h1 id="city-name" class="text-3xl font-bold text-gray-800 tracking-tight"></h1>
+                    <p id="highlights" class="text-gray-500 mt-1 text-sm flex gap-2 flex-wrap"></p>
+                </div>
+                <a id="weather-link" href="#" target="_blank" class="flex flex-col items-center bg-blue-50 p-2 rounded-lg">
+                    <i data-lucide="sun" class="text-orange-400 mb-1 w-5 h-5"></i>
+                    <span class="text-[10px] text-blue-600 font-bold">天氣</span>
+                </a>
+            </div>
+
+            <div class="px-4 flex flex-col gap-4 relative">
+                <div class="absolute left-8 top-4 bottom-4 w-0.5 bg-gray-200 -z-10"></div>
+                <div id="timeline-container">
+                    </div>
+            </div>
+        </div>
+
+        <div id="tools-view" class="hidden p-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">旅行工具箱</h1>
+            
+            <div class="bg-red-50 p-4 rounded-2xl border border-red-100 mb-6 flex gap-4 items-center">
+                <div class="bg-red-100 p-3 rounded-full text-red-600">
+                    <i data-lucide="phone" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-red-800">緊急聯絡</h3>
+                    <p class="text-xs text-red-600">日本報警 110 | 救護車 119</p>
+                    <p class="text-xs text-red-600 mt-1">外交部緊急: 080-3524-7662</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <i data-lucide="wallet" class="text-indigo-500 w-5 h-5"></i>
+                    <h2 class="font-bold text-gray-700">預算概況 (JPY)</h2>
+                </div>
+                <div class="flex items-end gap-1 mb-2">
+                    <span class="text-3xl font-bold text-gray-800">429,000</span>
+                    <span class="text-sm text-gray-400 mb-1">円</span>
+                </div>
+                <div class="h-4 flex rounded-full overflow-hidden bg-gray-100 mb-4">
+                    <div class="bg-green-500" style="width: 8%"></div> <div class="bg-blue-500" style="width: 19%"></div> <div class="bg-orange-500" style="width: 35%"></div> <div class="bg-pink-500" style="width: 38%"></div> </div>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div>JR Pass</div>
+                    <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-blue-500"></div>住宿</div>
+                    <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-orange-500"></div>餐飲</div>
+                    <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-pink-500"></div>購物</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex items-center gap-2 mb-4">
+                    <i data-lucide="check-square" class="text-emerald-500 w-5 h-5"></i>
+                    <h2 class="font-bold text-gray-700">行前清單</h2>
+                </div>
+                <div id="checklist-container" class="space-y-3">
+                    </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 backdrop-blur-md border-t border-gray-200 px-6 py-4 flex justify-between items-center z-50 pb-6">
+        <button onclick="switchTab('itinerary')" id="tab-itinerary" class="nav-btn active flex flex-col items-center gap-1 transition-colors">
+            <i data-lucide="calendar" class="w-6 h-6"></i>
+            <span class="text-[10px] font-medium">行程</span>
+        </button>
+        <div class="w-px h-8 bg-gray-200"></div>
+        <button onclick="switchTab('tools')" id="tab-tools" class="nav-btn inactive flex flex-col items-center gap-1 transition-colors">
+            <i data-lucide="wallet" class="w-6 h-6"></i>
+            <span class="text-[10px] font-medium">工具</span>
+        </button>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const TRIP_DATA = {
+            "2022-12-10": {
+                city: "福岡市區", weatherCity: "Fukuoka", highlights: ["抵達", "天神", "屋台"],
+                items: [
+                    { time: "07:00", type: "transport", title: "抵達福岡機場", desc: "前往國內線航廈搭地鐵", sub: "建議購買地鐵一日券" },
+                    { time: "08:30", type: "transport", title: "機場巴士/地鐵", desc: "搭1號巴士去國內線轉地鐵 (約15分)", dest: "天神南站" },
+                    { time: "10:00", type: "hotel", title: "飯店寄放行李", desc: "住天神南，可在天神站走地下街到達" },
+                    { time: "11:00", type: "visit", title: "天神地下街/市區", desc: "換電話卡，閒逛，吃午餐" },
+                    { time: "18:00", type: "food", title: "中洲屋台", desc: "體驗博多屋台文化", tags: ["必吃", "氣氛"] }
+                ]
+            },
+            "2022-12-11": {
+                city: "別府", weatherCity: "Beppu", highlights: ["地獄溫泉", "米其林三星溫泉"],
+                items: [
+                    { time: "07:31", type: "transport", title: "音速號 Sonic", desc: "博多 -> 別府", dest: "別府站", sub: "09:52 抵達" },
+                    { time: "10:30", type: "visit", title: "別府地獄巡禮", desc: "海地獄、血池地獄等7大溫泉", link: "https://boo2k.com" },
+                    { time: "13:00", type: "food", title: "地獄蒸し工房 鉄輪", desc: "利用溫泉蒸氣蒸煮食物", tags: ["體驗", "特色"] },
+                    
